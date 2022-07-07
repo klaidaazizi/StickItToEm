@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1062947777020",
+    "project_id": "stickittoem-f9dd8",
+    "storage_bucket": "stickittoem-f9dd8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1062947777020:android:139abec86e14670c346a79",
+        "android_client_info": {
+          "package_name": "com.example.stickittoem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1062947777020-r23p3odmr3s0hpcqtgc3lv0c27gck7mr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjjo0D1cBMHEQ7A2VeK0Cw3iiZhgnTP4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1062947777020-r23p3odmr3s0hpcqtgc3lv0c27gck7mr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
