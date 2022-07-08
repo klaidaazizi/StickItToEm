@@ -13,16 +13,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StickItToEm"
         tools:targetApi="31">
-        <activity android:name=".LoginActivity"
-            android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
+        <service
+            android:name=".MessagingService"
+            android:enabled="true"
+            android:exported="true"></service>
 
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
-        </activity>
+        <activity android:name=".MainActivity"></activity>
     </application>
 
 </manifest>
