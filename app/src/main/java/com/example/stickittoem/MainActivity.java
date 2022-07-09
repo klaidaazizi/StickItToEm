@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,12 +24,17 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<RadioButton> buttons;
     private ImageView checked;
 
+    private String currentUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        showImages();
+        currentUser = getIntent().getStringExtra("currentUser");
+    }
+
+    public void selectImage(View view) {
 
     }
 
