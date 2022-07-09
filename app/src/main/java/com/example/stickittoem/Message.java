@@ -4,10 +4,10 @@ package com.example.stickittoem;
  * Message model
  */
 public class Message {
-    private String sender;
-    private String receiver;
-    private String timestamp;
-    private String content;
+    public String sender;
+    public String receiver;
+    public String timestamp;
+    public String content;
 
     public Message(String sender, String receiver, String timestamp, String content) {
         this.sender = sender;
