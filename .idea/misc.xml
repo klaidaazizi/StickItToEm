@@ -5,10 +5,8 @@
       <map>
         <entry key="app/src/main/res/layout-w1240dp/activity_login.xml" value="0.12684069611780455" />
         <entry key="app/src/main/res/layout-w936dp/activity_login.xml" value="0.148046875" />
-        <entry key="app/src/main/res/layout/activity_history.xml" value="0.22739105224609377" />
         <entry key="app/src/main/res/layout/activity_login.xml" value="0.19739583333333333" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
-        <entry key="app/src/main/res/layout/history_item.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.23192749023437503" />
       </map>
     </option>
   </component>
