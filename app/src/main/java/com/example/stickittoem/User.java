@@ -22,5 +22,22 @@ public class User {
         this.messages = messages;
     }
 
+    public String getUsername() {
+        return username;
+    }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public ArrayList<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ArrayList<Message> messages) {
+        this.messages = messages;
+    }
+    public void addHistory(String sender, String receiver, String timestamp, String image) {
+        this.messages.add(new Message(sender, receiver, timestamp, image));
+    }
 }

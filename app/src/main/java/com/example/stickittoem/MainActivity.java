@@ -3,7 +3,10 @@ package com.example.stickittoem;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +21,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,12 +97,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUsers(Iterable<DataSnapshot> children) {
         users = new HashMap<>();
-        for (DataSnapshot child : children) {
-            String user = child.getKey();
-            String username = (String) child.child("username").getValue();
+        for (DataSnapshot userSnapshot : children) {
+            String user = userSnapshot.getKey();
+            String username = (String) userSnapshot.child("username").getValue();
             ArrayList<Message> messages = new ArrayList<>();
-            if (child.child("messages").exists()) {
-                for (DataSnapshot messageSnapshot : child.child("messages").getChildren()) {
+            if (userSnapshot.child("messages").exists()) {
+                for (DataSnapshot messageSnapshot : userSnapshot.child("messages").getChildren()) {
                     String sender = (String) messageSnapshot.child("sender").getValue();
                     String receiver = (String) messageSnapshot.child("receiver").getValue();
                     String content = (String) messageSnapshot.child("content").getValue();
@@ -114,9 +119,9 @@ public class MainActivity extends AppCompatActivity {
         User currUser = users.get(currentUser);
         usersDatabase.child(currentUser).setValue(currUser).addOnCompleteListener(task -> {
             if(task.isSuccessful()){
-                Toast.makeText(this,"Current user loaded successfully",Toast.LENGTH_SHORT);
+                Toast.makeText(this,"Current user loaded successfully",Toast.LENGTH_SHORT).show();
             } else{
-                Toast.makeText(this,"User doesn't exist",Toast.LENGTH_SHORT);
+                Toast.makeText(this,"User doesn't exist",Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -128,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showImages() {
             imageToButtonMap = new HashMap<RadioButton, String>();
-            image1 = (ImageView) findViewById(R.id.imageView1);
+            image1 = findViewById(R.id.imageView1);
             Picasso.get().load(IMAGE_1).into(image1);
             image2 = (ImageView) findViewById(R.id.imageView2);
             Picasso.get().load(IMAGE_2).into(image2);
@@ -165,24 +170,37 @@ public class MainActivity extends AppCompatActivity {
      */
     public void sendMessage(View view) {
         receiverUser = ((EditText) findViewById(R.id.friendUsernameTV)).getText().toString();
-        if (users.containsKey(receiverUser)){
-            if (checked != null){
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendMessage(users.get(receiverUser).toString(),checked);
-                        Toast.makeText(MainActivity.this,"Image successfully sent",Toast.LENGTH_SHORT).show();
-                    }
-                });
+        if (users.containsKey(receiverUser)) {
+            if (checked != null) {
+                new Thread(() -> sendMessage(users.get(receiverUser).getUsername(), checked)).start();
+                Toast.makeText(MainActivity.this, "Image successfully sent", Toast.LENGTH_SHORT).show();
+                saveHistory();
+            } else{
+                Toast.makeText(MainActivity.this,"Please select an image",Toast.LENGTH_SHORT).show();
             }
+        } else{
+                Toast.makeText(MainActivity.this,"User does not exist",Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void saveHistory() {
+        User user = users.get(currentUser);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        user.addHistory(currentUser, receiverUser, dtf.format(now), checked);
+        usersDatabase.child(currentUser).setValue(user).addOnCompleteListener(task ->{
+            if  (task.isSuccessful()) {
+                Toast.makeText(this, "History saved successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "History could not be saved", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Reference: Firebase demo, FCMActivity
     private void sendMessage(String receiverUser, String checked) {
         JSONObject jPayload = new JSONObject();
         JSONObject jNotification = new JSONObject();
-        JSONObject jData = new JSONObject();
 
         try{
             jNotification.put("title", "Emoji Received!");
@@ -191,53 +209,24 @@ public class MainActivity extends AppCompatActivity {
             jNotification.put("badge", "1");
             jNotification.put("click_action", "OPEN_ACTIVITY_1");
 
-            jData.put("sender", currentUser);
-            jData.put("receiver",receiverUser);
-
             // If sending to a single client
             jPayload.put("to", receiverUser);
             jPayload.put("priority", "high");
             jPayload.put("notification", jNotification);
-
+        } catch (JSONException e) {
+            Toast.makeText(this,"sendMessage not successful",Toast.LENGTH_SHORT).show();
+        }
             //Reference: Utils from Firebase demo
             // HTTP and send the payload
-            URL url = new URL("https://fcm.googleapis.com/fcm/send");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", SERVER_KEY);
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
+            final String resp = Utils.fcmHttpConnection(SERVER_KEY, jPayload);
+            Utils.postToastMessage("Status from Server: " + resp, getApplicationContext());
 
-            // Send FCM message content.
-            OutputStream outputStream = conn.getOutputStream();
-            outputStream.write(jPayload.toString().getBytes());
-            outputStream.close();
-
-            // Read FCM response.
-            InputStream inputStream = conn.getInputStream();
-            final String resp = convertStreamToString(inputStream);
-
-        } catch (JSONException | IOException e) {
-            Log.e(TAG,"sendMessage not successful",e);
-        }
     }
 
-    //Reference: Utils from Firebase demo
-
-    public static String convertStreamToString(InputStream inputStream) {
-        StringBuilder stringBuilder = new StringBuilder();
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            String len;
-            while ((len = bufferedReader.readLine()) != null) {
-                stringBuilder.append(len);
-            }
-            bufferedReader.close();
-            return stringBuilder.toString().replace(",", ",\n");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
+//    public void checkHistory(View view) {
+//        Intent intent = new Intent(this, HistoryActivity.class);
+//        intent.putExtra("messages", users.get(currentUser).getMessages());
+//        startActivity(intent);
+//    }
 
 }
