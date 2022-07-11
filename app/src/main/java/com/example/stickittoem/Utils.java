@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
+//Reference: Firebase Demo from Dr. Feinberg
+
 public class Utils {
 
     public static class MyException extends Exception {

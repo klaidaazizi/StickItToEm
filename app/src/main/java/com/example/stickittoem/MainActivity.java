@@ -116,15 +116,27 @@ public class MainActivity extends AppCompatActivity {
         }
 
     private void getUser() {
-        User currUser = users.get(currentUser);
-        usersDatabase.child(currentUser).setValue(currUser).addOnCompleteListener(task -> {
-            if(task.isSuccessful()){
-                Toast.makeText(this,"Current user loaded successfully",Toast.LENGTH_SHORT).show();
-            } else{
-                Toast.makeText(this,"User doesn't exist",Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (users.containsKey(currentUser)) {
+            User currUser = users.get(currentUser);
+            usersDatabase.child(currentUser).setValue(currUser).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Toast.makeText(this, "Current user loaded successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "User doesn't exist", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            User user = new User(currentUser);
+            usersDatabase.child(currentUser).setValue(user).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    Toast.makeText(this, "Successfully added new user", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to add user", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
+
 
 
     /**
@@ -174,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             if (checked != null) {
                 new Thread(() -> sendMessage(users.get(receiverUser).getUsername(), checked)).start();
                 Toast.makeText(MainActivity.this, "Image successfully sent", Toast.LENGTH_SHORT).show();
-                saveHistory();
+                updateHistory();
             } else{
                 Toast.makeText(MainActivity.this,"Please select an image",Toast.LENGTH_SHORT).show();
             }
@@ -183,19 +195,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void saveHistory() {
-        User user = users.get(currentUser);
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        user.addHistory(currentUser, receiverUser, dtf.format(now), checked);
-        usersDatabase.child(currentUser).setValue(user).addOnCompleteListener(task ->{
-            if  (task.isSuccessful()) {
-                Toast.makeText(this, "History saved successfully", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, "History could not be saved", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     // Reference: Firebase demo, FCMActivity
     private void sendMessage(String receiverUser, String checked) {
@@ -223,10 +222,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    public void checkHistory(View view) {
-//        Intent intent = new Intent(this, HistoryActivity.class);
-//        intent.putExtra("messages", users.get(currentUser).getMessages());
-//        startActivity(intent);
-//    }
+    private void updateHistory() {
+        User user = users.get(currentUser);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        user.addHistory(currentUser, receiverUser, dtf.format(now), checked);
+        usersDatabase.child(currentUser).setValue(user).addOnCompleteListener(task ->{
+            if  (task.isSuccessful()) {
+                Toast.makeText(this, "History saved successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "History could not be saved", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public void checkHistory(View view) {
+        Intent intent = new Intent(this, HistoryActivity.class);
+        intent.putExtra("messages", users.get(currentUser).getMessages());
+        startActivity(intent);
+    }
 
 }

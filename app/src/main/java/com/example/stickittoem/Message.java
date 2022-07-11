@@ -1,9 +1,11 @@
 package com.example.stickittoem;
 
+import java.io.Serializable;
+
 /**
  * Message model
  */
-public class Message {
+public class Message implements Serializable {
     public String sender;
     public String receiver;
     public String timestamp;

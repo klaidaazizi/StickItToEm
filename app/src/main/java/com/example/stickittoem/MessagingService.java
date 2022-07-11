@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -32,6 +33,8 @@ public class MessagingService extends FirebaseMessagingService {
 
 
     public MessagingService() {
+        super();
+        Log.d(TAG,"Service running");
     }
 
     @Override
@@ -50,7 +53,7 @@ public class MessagingService extends FirebaseMessagingService {
     // [START receive_message]
     //
     @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         // [START_EXCLUDE]
         // There are two types of messages data messages and notification messages. Data messages are handled
         // here in onMessageReceived whether the app is in the foreground or background. Data messages are the type
@@ -71,7 +74,7 @@ public class MessagingService extends FirebaseMessagingService {
          */
 
         super.onMessageReceived(remoteMessage);
-        Toast.makeText(this, "Notification received",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Notification received",Toast.LENGTH_LONG).show();
         if (remoteMessage.getNotification() != null) {
             Toast.makeText(this, "Message Notification Body: " + remoteMessage.getNotification().getBody(),Toast.LENGTH_SHORT).show();
             showNotification(remoteMessage.getNotification());
@@ -102,12 +105,15 @@ public class MessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder builder;
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
 
-        NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
-        // Configure the notification channel
-        notificationChannel.setDescription(CHANNEL_DESCRIPTION);
-        notificationManager.createNotificationChannel(notificationChannel);
-        builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            // Configure the notification channel
+            notificationChannel.setDescription(CHANNEL_DESCRIPTION);
+            notificationManager.createNotificationChannel(notificationChannel);
+            builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        } else{
+            builder = new NotificationCompat.Builder(this);
+        }
         try{
             URL url = new URL(remoteMessage.getImageUrl().toString());
             BitmapFactory.decodeStream(url.openConnection().getInputStream());

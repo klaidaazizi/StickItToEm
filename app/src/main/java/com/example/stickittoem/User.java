@@ -10,11 +10,11 @@ public class User {
     public ArrayList<Message> messages;
 
     public User() {
-        // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
     public User(String username) {
         this.username = username;
+        this.messages = new ArrayList<>();
     }
 
     public User(String username, ArrayList<Message> messages) {
