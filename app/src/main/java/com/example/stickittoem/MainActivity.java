@@ -2,25 +2,23 @@ package com.example.stickittoem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -57,12 +55,16 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference usersDatabase;
     private Map<String, User> users;
 
+    private int notiNumber = 0;
+
     private static final String SERVER_KEY = "key=BMvy9qoBEGhjmlS1Vbk6RFc7hDvzNO4kLhPkuGW-nKoR_aa8b0tjq8k3_bjlM32jt4_h0H9T4j3mxDIqU0AbsLY";
     private static final String TAG = "FCMActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createNotificationChannel();
 
         showImages();
         currentUser = getIntent().getStringExtra("currentUser");
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError error) {
             }
         });
+
     }
 
 
@@ -212,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
             jPayload.put("to", receiverUser);
             jPayload.put("priority", "high");
             jPayload.put("notification", jNotification);
+
         } catch (JSONException e) {
             Toast.makeText(this,"sendMessage not successful",Toast.LENGTH_SHORT).show();
         }
@@ -219,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
             // HTTP and send the payload
             final String resp = Utils.fcmHttpConnection(SERVER_KEY, jPayload);
             Utils.postToastMessage("Status from Server: " + resp, getApplicationContext());
+            sendNotification();
 
     }
 
@@ -241,5 +246,88 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("messages", users.get(currentUser).getMessages());
         startActivity(intent);
     }
+
+    // Reference: Notification demo
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(getString(R.string.channel_id), name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    // Reference Notification Demo and Android Notification Documentation
+    public void sendNotification(){
+        int notiImage;
+        if (checked == IMAGE_1) {
+            notiImage = R.mipmap.stareyes;
+        }
+        else if (checked == IMAGE_2) {
+            notiImage = R.mipmap.raisedeyebrows;
+        }
+        else {
+            notiImage = R.mipmap.happy;
+        }
+        // Prepare intent which is triggered if the
+        // notification is selected
+        Intent intent = new Intent(this, LoginActivity.class);
+        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
+
+        PendingIntent callIntent = PendingIntent.getActivity(this, (int)System.currentTimeMillis(),
+                new Intent(this, LoginActivity.class), 0);
+
+
+        // Build notification
+        // Actions are just fake
+        String channelId = getString(R.string.channel_id);
+
+        Notification noti = new NotificationCompat.Builder(this, channelId)
+                .setContentText("You sent a sticker to " + receiverUser + "!")
+                .setContentTitle("Sticker")
+                .setLargeIcon(BitmapFactory.decodeResource(this.getResources(),
+                        notiImage))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+                ;
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);            // hide the notification after its selected
+            noti.flags |= Notification.FLAG_AUTO_CANCEL ;
+
+            notificationManager.notify(notiNumber, noti);
+    }
+
+    /*
+
+    public void receiveMessage() {
+        usersDatabase.child("users")
+                .child("messages")
+                .child("receiver")
+                .equalTo(currentUser)
+                .addValueEventListener(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                Message message = snapshot.getValue(Message.class);
+
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        }
+                );
+    }
+
+     */
 
 }
